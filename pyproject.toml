@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hyfi-ml"
-version = "0.0.0"
+version = "0.1.0"
 description = "HyFI-ML is a Python package that extends the Hydra Fast Interface (HyFI) framework with machine learning capabilities."
 authors = ["Young Joon Lee <entelecheia@hotmail.com>"]
 license = "MIT"
