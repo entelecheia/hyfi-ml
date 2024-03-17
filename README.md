@@ -8,7 +8,7 @@
 [![jupyter-book-image]][docs-url]
 
 <!-- Links: -->
-[codecov-image]: https://codecov.io/gh/entelecheia/hyfi-ml/branch/main/graph/badge.svg?token=BC2f1ooCPI
+[codecov-image]: https://codecov.io/gh/entelecheia/hyfi-ml/branch/main/graph/badge.svg?token=bs39xzB2Ay
 [codecov-url]: https://codecov.io/gh/entelecheia/hyfi-ml
 [pypi-image]: https://img.shields.io/pypi/v/hyfi-ml
 [license-image]: https://img.shields.io/github/license/entelecheia/hyfi-ml
