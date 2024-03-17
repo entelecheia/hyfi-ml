@@ -1,0 +1,5 @@
+name: "HyFI-ML"
+authors: "Young Joon Lee <entelecheia@hotmail.com>"
+description: "HyFI-ML is a Python package that extends the Hydra Fast Interface (HyFI) framework with machine learning capabilities."
+homepage: "https://hyfi-ml.entelecheia.ai"
+license: "MIT"

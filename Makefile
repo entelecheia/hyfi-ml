@@ -96,17 +96,17 @@ install-precommit-hooks: install-precommit ## install pre-commit hooks
 	@pre-commit install
 
 mkvirtualenv: ## create the project environment
-	@python3 -m venv "$$WORKON_HOME/hyfi-absa"
-	@. "$$WORKON_HOME/hyfi-absa/bin/activate"
+	@python3 -m venv "$$WORKON_HOME/hyfi-ml"
+	@. "$$WORKON_HOME/hyfi-ml/bin/activate"
 	@pip install --upgrade pip setuptools wheel
 
 mkvirtualenv-system: ## create the project environment with system site packages
-	@python3 -m venv "$$WORKON_HOME/hyfi-absa" --system-site-packages
-	@. "$$WORKON_HOME/hyfi-absa/bin/activate"
+	@python3 -m venv "$$WORKON_HOME/hyfi-ml" --system-site-packages
+	@. "$$WORKON_HOME/hyfi-ml/bin/activate"
 	@pip install --upgrade pip setuptools wheel
 
 workon: ## activate the project environment
-	@. "$$WORKON_HOME/hyfi-absa/bin/activate"
+	@. "$$WORKON_HOME/hyfi-ml/bin/activate"
 
 initialize: install-pipx ## initialize the project environment
 	@pipx install copier

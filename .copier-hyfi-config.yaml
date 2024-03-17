@@ -1,0 +1,6 @@
+# Changes here will be overwritten by Copier; do NOT edit manually
+_commit: v0.6.10
+_src_path: gh:entelecheia/hyfi-template
+package_name: hyfiml
+project_name: hyfi-ml
+
