@@ -84,7 +84,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cleanlab.filter import find_label_issues
 from datasets import Dataset, DatasetDict, load_dataset
-from pydantic import BaseModel, Field
+from hyfi.composer import BaseModel, Field
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import (
