@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>hyfiml.conf &#8212; HyFI-ML</title>
+    <title>hyfiml.models.text_classifier &#8212; HyFI-ML</title>
   
   
   
@@ -89,12 +89,12 @@
     <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
     <script>window.MathJax = {"tex": {"macros": {"N": "\\mathbb{N}", "floor": ["\\lfloor#1\\rfloor", 1], "bmat": ["\\left[\\begin{array}"], "emat": ["\\end{array}\\right]"]}}, "options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/hyfiml.conf';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/hyfiml.models.text_classifier';</script>
     <link rel="icon" href="https://assets.entelecheia.ai/favicon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="hyfiml.models" href="hyfiml.models.html" />
-    <link rel="prev" title="hyfiml" href="hyfiml.html" />
+    <link rel="next" title="Examples" href="../examples.html" />
+    <link rel="prev" title="hyfiml.models" href="hyfiml.models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -206,9 +206,9 @@
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../api.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="hyfiml.html">hyfiml</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l3 current active"><a class="current reference internal" href="#">hyfiml.conf</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="hyfiml.models.html">hyfiml.models</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="hyfiml.models.text_classifier.html">hyfiml.models.text_classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hyfiml.conf.html">hyfiml.conf</a></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="hyfiml.models.html">hyfiml.models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l4 current active"><a class="current reference internal" href="#">hyfiml.models.text_classifier</a></li>
 </ul>
 </li>
 </ul>
@@ -291,7 +291,7 @@
       
       
       
-      <li><a href="https://github.com/entelecheia/hyfi-ml/edit/main/book/_autosummary/hyfiml.conf.rst" target="_blank"
+      <li><a href="https://github.com/entelecheia/hyfi-ml/edit/main/book/_autosummary/hyfiml.models.text_classifier.rst" target="_blank"
    class="btn btn-sm btn-source-edit-button dropdown-item"
    title="Suggest edit"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -308,7 +308,7 @@
       
       
       
-      <li><a href="https://github.com/entelecheia/hyfi-ml/issues/new?title=Issue%20on%20page%20%2F_autosummary/hyfiml.conf.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/entelecheia/hyfi-ml/issues/new?title=Issue%20on%20page%20%2F_autosummary/hyfiml.models.text_classifier.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -338,7 +338,7 @@
       
       
       
-      <li><a href="../_sources/_autosummary/hyfiml.conf.rst" target="_blank"
+      <li><a href="../_sources/_autosummary/hyfiml.models.text_classifier.rst" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -420,7 +420,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>hyfiml.conf</h1>
+    <h1>hyfiml.models.text_classifier</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -434,8 +434,105 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-hyfiml.conf">
-<span id="hyfiml-conf"></span><h1>hyfiml.conf<a class="headerlink" href="#module-hyfiml.conf" title="Link to this heading">#</a></h1>
+  <section id="module-hyfiml.models.text_classifier">
+<span id="hyfiml-models-text-classifier"></span><h1>hyfiml.models.text_classifier<a class="headerlink" href="#module-hyfiml.models.text_classifier" title="Link to this heading">#</a></h1>
+<p>Module: text_classifier.py</p>
+<p>This module provides a TextClassifier class for performing text classification tasks using transformer models from the
+Hugging Face library. The TextClassifier class allows loading datasets, preprocessing data, training models, making
+predictions, and identifying potential label errors.</p>
+<dl>
+<dt>Classes:</dt><dd><ul class="simple">
+<li><p>TrainingConfig: A Pydantic BaseModel class for configuring training arguments.</p></li>
+<li><p>DatasetConfig: A Pydantic BaseModel class for configuring dataset arguments.</p></li>
+<li><p>CrossValidateConfig: A Pydantic BaseModel class for configuring cross-validation arguments.</p></li>
+<li><p>TextClassifier: The main class for text classification tasks.</p></li>
+</ul>
+</dd>
+<dt>The TextClassifier class includes the following methods:</dt><dd><ul class="simple">
+<li><p>load_dataset: Loads a dataset using the configuration specified in dataset_config.</p></li>
+<li><p>preprocess_dataset: Preprocesses the dataset by tokenizing the text and converting labels.</p></li>
+<li><p>split_dataset: Splits the dataset into train, test, and optionally dev sets based on the configuration specified in dataset_config.</p></li>
+<li><p>compute_metrics: Computes evaluation metrics during training.</p></li>
+<li><p>train: Trains the model on the provided dataset using the specified training configuration.</p></li>
+<li><p>predict: Makes predictions on a new dataset using the trained model.</p></li>
+<li><p>save_model: Saves the trained model to a specified directory.</p></li>
+<li><p>load_model: Loads a trained model from a specified directory.</p></li>
+<li><p>plot_confusion_matrix: Plots the confusion matrix for a given dataset.</p></li>
+<li><p>cross_validate_and_predict: Performs cross-validation and prediction using the trained model.</p></li>
+<li><p>find_potential_label_errors: Finds potential label errors using cleanlab’s find_label_issues function.</p></li>
+</ul>
+</dd>
+<dt>The TextClassifier class takes the following arguments during initialization:</dt><dd><ul class="simple">
+<li><p>model_name: The name of the transformer model to use.</p></li>
+<li><p>num_labels: The number of labels in the classification task.</p></li>
+<li><p>dataset_config: An instance of the DatasetConfig class specifying the dataset configuration.</p></li>
+<li><p>training_config: An instance of the TrainingConfig class specifying the training configuration.</p></li>
+<li><p>cross_validate_config: An instance of the CrossValidateConfig class specifying the cross-validation configuration.</p></li>
+</ul>
+</dd>
+<dt>Example usage:</dt><dd><p># Create dataset, training, and cross-validation configurations
+dataset_config = DatasetConfig(</p>
+<blockquote>
+<div><p>dataset_name=”imdb”,
+text_column_name=”text”,
+label_column_name=”label”,</p>
+</div></blockquote>
+<p>)</p>
+<dl class="simple">
+<dt>training_config = TrainingConfig(</dt><dd><p>output_dir=”output”,
+num_train_epochs=3,
+per_device_train_batch_size=16,
+per_device_eval_batch_size=64,</p>
+</dd>
+</dl>
+<p>)</p>
+<dl class="simple">
+<dt>cross_validate_config = CrossValidateConfig(</dt><dd><p>n_splits=5,
+validation_size=0.1,
+random_state=42,
+shuffle=True,</p>
+</dd>
+</dl>
+<p>)</p>
+<p># Create a TextClassifier instance
+classifier = TextClassifier(</p>
+<blockquote>
+<div><p>model_name=”bert-base-uncased”,
+num_labels=2,
+dataset_config=dataset_config,
+training_config=training_config,
+cross_validate_config=cross_validate_config,</p>
+</div></blockquote>
+<p>)</p>
+<p># Load the dataset
+dataset = classifier.load_dataset()</p>
+<p># Train the model
+classifier.train(dataset)</p>
+<p># Make predictions on a new dataset
+new_dataset = load_dataset(“imdb”, split=”test”)
+predictions = classifier.predict(new_dataset)</p>
+<p># Perform cross-validation and find potential label errors
+predictions = classifier.cross_validate_and_predict(dataset)
+label_issues_info = classifier.find_potential_label_errors(predictions, dataset[“label”])</p>
+</dd>
+</dl>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CrossValidateConfig</span></code>(*[, n_splits, ...])</p></td>
+<td><p>Configuration for cross-validation arguments.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DatasetConfig</span></code>(*, dataset_name[, ...])</p></td>
+<td><p>Configuration for dataset arguments.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextClassifier</span></code>(*, model_name, num_labels, ...)</p></td>
+<td><p>Text classifier based on transformer models from Hugging Face.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TrainingConfig</span></code>(*, output_dir, num_train_epochs)</p></td>
+<td><p>Configuration for training arguments.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 
     <script type="text/x-thebe-config">
@@ -469,20 +566,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="hyfiml.html"
+       href="hyfiml.models.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">hyfiml</p>
+        <p class="prev-next-title">hyfiml.models</p>
       </div>
     </a>
     <a class="right-next"
-       href="hyfiml.models.html"
+       href="../examples.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">hyfiml.models</p>
+        <p class="prev-next-title">Examples</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

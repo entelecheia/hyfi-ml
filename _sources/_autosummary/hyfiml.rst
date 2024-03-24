@@ -34,4 +34,5 @@
    :recursive:
 
    hyfiml.conf
+   hyfiml.models
 
