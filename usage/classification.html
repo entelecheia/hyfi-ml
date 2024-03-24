@@ -555,12 +555,12 @@ document.write(`
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:hyfi.utils.notebooks:Google Colab not detected.
 INFO:hyfi.utils.notebooks:Extension autotime not found. Install it first.
-INFO:hyfi.joblib.joblib:initialized batcher with &lt;hyfi.joblib.batcher.batcher.Batcher object at 0x7f6decbab400&gt;
+INFO:hyfi.joblib.joblib:initialized batcher with &lt;hyfi.joblib.batcher.batcher.Batcher object at 0x7fd85667cb80&gt;
 INFO:hyfi.main.config:HyFi project [hyfi-ml] initialized
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>project_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/$HOME/workspace/projects/hyfi-ml
-project_workspace_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/$HOME/workspace/projects/hyfi-ml/workspace
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>project_dir: /home/yjlee/workspace/projects/hyfi-ml
+project_workspace_dir: /home/yjlee/workspace/projects/hyfi-ml/workspace
 </pre></div>
 </div>
 </div>
@@ -587,6 +587,22 @@ project_workspace_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/$H
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">records_to_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">HyFI</span><span class="o">.</span><span class="n">save_dataframes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;cointax_data.parquet&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+RangeIndex: 714 entries, 0 to 713
+Data columns (total 2 columns):
+ #   Column  Non-Null Count  Dtype 
+---  ------  --------------  ----- 
+ 0   긍정      478 non-null    object
+ 1   부정      236 non-null    object
+dtypes: object(2)
+memory usage: 11.3+ KB
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:hyfi.utils.datasets.save:Saving dataframe to /home/yjlee/workspace/projects/hyfi-ml/workspace/data/cointax_data.parquet
 </pre></div>
 </div>
 </div>
