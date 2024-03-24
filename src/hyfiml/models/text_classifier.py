@@ -77,7 +77,7 @@ Example usage:
     label_issues_info = classifier.find_potential_label_errors(predictions, dataset["label"])
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 import evaluate
 import matplotlib.pyplot as plt
@@ -136,6 +136,8 @@ class DatasetConfig(BaseModel):
     Attributes:
         dataset_name (str): The name of the dataset to load from the Hugging Face datasets library.
         dataset_config_name (Optional[str]): The configuration name of the dataset. Default is None.
+        data_dir (Optional[str]): The directory containing the dataset files. Default is None.
+        data_files (Optional[Union[str, Sequence[str], Mapping[str, Union[str, Sequence[str]]]]): The dataset files to load. Default is None.
         train_split_name (str): The name of the train split. Default is "train".
         test_split_name (str): The name of the test split. Default is "test".
         text_column_name (str): The name of the column containing the text data. Default is "text".
@@ -149,6 +151,10 @@ class DatasetConfig(BaseModel):
 
     dataset_name: str
     dataset_config_name: Optional[str] = None
+    data_dir: Optional[str] = None
+    data_files: Optional[
+        Union[str, Sequence[str], Mapping[str, Union[str, Sequence[str]]]]
+    ] = None
     train_split_name: str = "train"
     test_split_name: str = "test"
     text_column_name: str = "text"
@@ -216,6 +222,8 @@ class TextClassifier(BaseModel):
         return load_dataset(
             self.dataset_config.dataset_name,
             self.dataset_config.dataset_config_name,
+            data_dir=self.dataset_config.data_dir,
+            data_files=self.dataset_config.data_files,
             split=self.dataset_config.load_data_split,
         )
 
