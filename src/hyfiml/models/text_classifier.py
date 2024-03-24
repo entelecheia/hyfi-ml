@@ -1,19 +1,22 @@
 """
 Module: text_classifier.py
 
-This module provides a TextClassifier class for performing text classification tasks using transformer models from the Hugging Face library.
-The TextClassifier class allows loading datasets, preprocessing data, training models, making predictions, and identifying potential label errors.
+This module provides a TextClassifier class for performing text classification tasks using transformer models from the
+Hugging Face library. The TextClassifier class allows loading datasets, preprocessing data, training models, making
+predictions, and identifying potential label errors.
 
 Classes:
     - TrainingConfig: A Pydantic BaseModel class for configuring training arguments.
+    - DatasetConfig: A Pydantic BaseModel class for configuring dataset arguments.
+    - CrossValidateConfig: A Pydantic BaseModel class for configuring cross-validation arguments.
     - TextClassifier: The main class for text classification tasks.
 
 The TextClassifier class includes the following methods:
-    - load_dataset: Loads a dataset from the Hugging Face datasets library.
+    - load_dataset: Loads a dataset using the configuration specified in dataset_config.
     - preprocess_dataset: Preprocesses the dataset by tokenizing the text and converting labels.
-    - split_dataset: Splits the dataset into train and test sets.
+    - split_dataset: Splits the dataset into train, test, and optionally dev sets based on the configuration specified in dataset_config.
     - compute_metrics: Computes evaluation metrics during training.
-    - train: Trains the model on the provided dataset using the specified training arguments.
+    - train: Trains the model on the provided dataset using the specified training configuration.
     - predict: Makes predictions on a new dataset using the trained model.
     - save_model: Saves the trained model to a specified directory.
     - load_model: Loads a trained model from a specified directory.
@@ -21,58 +24,69 @@ The TextClassifier class includes the following methods:
     - cross_validate_and_predict: Performs cross-validation and prediction using the trained model.
     - find_potential_label_errors: Finds potential label errors using cleanlab's find_label_issues function.
 
-The module also includes the following dependencies:
-    - typing: Provides type hinting support.
-    - datasets: Hugging Face datasets library for loading and manipulating datasets.
-    - pydantic: Library for data validation and settings management using Python type annotations.
-    - transformers: Hugging Face transformers library for natural language processing tasks.
-    - numpy: Library for numerical operations.
-    - evaluate: Hugging Face evaluate library for computing evaluation metrics.
-    - sklearn.metrics: Scikit-learn library for computing confusion matrix and other metrics.
-    - matplotlib: Library for data visualization.
-    - sklearn.model_selection: Scikit-learn library for model selection and cross-validation.
-    - cleanlab.filter: Cleanlab library for identifying potential label errors.
+The TextClassifier class takes the following arguments during initialization:
+    - model_name: The name of the transformer model to use.
+    - num_labels: The number of labels in the classification task.
+    - dataset_config: An instance of the DatasetConfig class specifying the dataset configuration.
+    - training_config: An instance of the TrainingConfig class specifying the training configuration.
+    - cross_validate_config: An instance of the CrossValidateConfig class specifying the cross-validation configuration.
 
 Example usage:
-    # Create a TextClassifier object
-    classifier = TextClassifier(
-        model_name="bert-base-uncased",
-        num_labels=2,
+    # Create dataset, training, and cross-validation configurations
+    dataset_config = DatasetConfig(
         dataset_name="imdb",
+        text_column_name="text",
+        label_column_name="label",
     )
 
-    # Load the dataset
-    dataset = classifier.load_dataset()
+    training_config = TrainingConfig(
+        output_dir="output",
+        num_train_epochs=3,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=64,
+    )
 
-    # Configure training arguments
-    training_args = TrainingConfig(output_dir="output", num_train_epochs=3)
-
-    # Perform cross-validation and prediction
-    predictions = classifier.cross_validate_and_predict(
-        dataset,
-        training_args=training_args,
+    cross_validate_config = CrossValidateConfig(
         n_splits=5,
         validation_size=0.1,
         random_state=42,
         shuffle=True,
     )
 
-    # Find potential label errors
-    true_labels = dataset["label"]
-    label_issues_info = classifier.find_potential_label_errors(predictions, true_labels)
+    # Create a TextClassifier instance
+    classifier = TextClassifier(
+        model_name="bert-base-uncased",
+        num_labels=2,
+        dataset_config=dataset_config,
+        training_config=training_config,
+        cross_validate_config=cross_validate_config,
+    )
 
-    # Print the indices of samples with potential label errors
-    print("Indices of samples with potential label errors:")
-    print(label_issues_info["indices"])
+    # Load the dataset
+    dataset = classifier.load_dataset()
+
+    # Train the model
+    classifier.train(dataset)
+
+    # Make predictions on a new dataset
+    new_dataset = load_dataset("imdb", split="test")
+    predictions = classifier.predict(new_dataset)
+
+    # Perform cross-validation and find potential label errors
+    predictions = classifier.cross_validate_and_predict(dataset)
+    label_issues_info = classifier.find_potential_label_errors(predictions, dataset["label"])
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import evaluate
 import matplotlib.pyplot as plt
+import numpy as np
+from cleanlab.filter import find_label_issues
 from datasets import Dataset, DatasetDict, load_dataset
 from pydantic import BaseModel, Field
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
+from sklearn.model_selection import KFold
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -115,6 +129,54 @@ class TrainingConfig(BaseModel):
     metric_for_best_model: str = "accuracy"
 
 
+class DatasetConfig(BaseModel):
+    """
+    Configuration for dataset arguments.
+
+    Attributes:
+        dataset_name (str): The name of the dataset to load from the Hugging Face datasets library.
+        dataset_config_name (Optional[str]): The configuration name of the dataset. Default is None.
+        train_split_name (str): The name of the train split. Default is "train".
+        test_split_name (str): The name of the test split. Default is "test".
+        text_column_name (str): The name of the column containing the text data. Default is "text".
+        label_column_name (str): The name of the column containing the label data. Default is "label".
+        load_data_split (str): The split of the dataset to load. Default is "train".
+        test_size (float): The proportion of the dataset to include in the test split. Default is 0.2.
+        dev_size (Optional[float]): The proportion of the dataset to include in the dev split. Default is None.
+        stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
+        random_state (Optional[int]): The random state for reproducibility. Default is None.
+    """
+
+    dataset_name: str
+    dataset_config_name: Optional[str] = None
+    train_split_name: str = "train"
+    test_split_name: str = "test"
+    text_column_name: str = "text"
+    label_column_name: str = "label"
+    load_data_split: str = "train"
+    test_size: float = 0.2
+    dev_size: Optional[float] = None
+    stratify_on: Optional[str] = None
+    random_state: Optional[int] = None
+
+
+class CrossValidateConfig(BaseModel):
+    """
+    Configuration for cross-validation arguments.
+
+    Attributes:
+        n_splits (int): The number of splits for cross-validation. Default is 5.
+        validation_size (float): The proportion of the training set to include in the validation split. Default is 0.1.
+        random_state (int): The random state for reproducibility. Default is 42.
+        shuffle (bool): Whether to shuffle the data before splitting. Default is True.
+    """
+
+    n_splits: int = 5
+    validation_size: float = 0.1
+    random_state: int = 42
+    shuffle: bool = True
+
+
 class TextClassifier(BaseModel):
     """
     Text classifier based on transformer models from Hugging Face.
@@ -122,26 +184,18 @@ class TextClassifier(BaseModel):
     Attributes:
         model_name (str): The name of the transformer model to use.
         num_labels (int): The number of labels for classification.
-        dataset_name (str): The name of the dataset to use.
-        dataset_config_name (str, optional): The configuration name of the dataset. Default is None.
-        dataset_split (str): The split of the dataset to use. Default is "train".
-        train_split_name (str): The name of the train split. Default is "train".
-        test_split_name (str): The name of the test split. Default is "test".
-        text_column_name (str): The name of the column containing the text data. Default is "text".
-        label_column_name (str): The name of the column containing the label data. Default is "label".
+        dataset_config (DatasetConfig): The configuration for the dataset.
+        training_config (TrainingConfig): The configuration for training.
+        cross_validate_config (CrossValidateConfig): The configuration for cross-validation.
         tokenizer (AutoTokenizer): The tokenizer for the transformer model. Automatically initialized.
         model (AutoModelForSequenceClassification): The transformer model for sequence classification. Automatically initialized.
     """
 
     model_name: str
     num_labels: int
-    dataset_name: str
-    dataset_config_name: Optional[str] = None
-    dataset_split: str = "train"
-    train_split_name: str = "train"
-    test_split_name: str = "test"
-    text_column_name: str = "text"
-    label_column_name: str = "label"
+    dataset_config: DatasetConfig
+    training_config: TrainingConfig
+    cross_validate_config: CrossValidateConfig
     tokenizer: AutoTokenizer = Field(init=False)
     model: AutoModelForSequenceClassification = Field(init=False)
 
@@ -154,20 +208,20 @@ class TextClassifier(BaseModel):
 
     def load_dataset(self) -> Dataset:
         """
-        Load the dataset.
+        Load the dataset using the configuration specified in dataset_config.
 
         Returns:
             Dataset: The loaded dataset.
         """
         return load_dataset(
-            self.dataset_name,
-            self.dataset_config_name,
-            split=self.dataset_split,
+            self.dataset_config.dataset_name,
+            self.dataset_config.dataset_config_name,
+            split=self.dataset_config.load_data_split,
         )
 
     def preprocess_dataset(self, dataset: Dataset) -> Dataset:
         """
-        Preprocess the dataset by tokenizing the text and converting the labels.
+        Preprocess the dataset by tokenizing the text and converting labels.
 
         Args:
             dataset (Dataset): The dataset to preprocess.
@@ -177,72 +231,64 @@ class TextClassifier(BaseModel):
         """
 
         def tokenize(examples):
-            return self.tokenizer(examples[self.text_column_name], truncation=True)
+            return self.tokenizer(
+                examples[self.dataset_config.text_column_name], truncation=True
+            )
 
         dataset = dataset.map(tokenize, batched=True)
         dataset = dataset.map(
-            lambda examples: {"labels": examples[self.label_column_name]}
+            lambda examples: {"labels": examples[self.dataset_config.label_column_name]}
         )
         dataset = dataset.remove_columns(
-            [self.text_column_name, self.label_column_name]
+            [
+                self.dataset_config.text_column_name,
+                self.dataset_config.label_column_name,
+            ]
         )
         dataset.set_format("torch")
         return dataset
 
-    def split_dataset(
-        self,
-        dataset: Dataset,
-        test_size: float = 0.2,
-        dev_size: Optional[float] = None,
-        stratify_on: Optional[str] = None,
-        random_state: Optional[int] = None,
-    ) -> DatasetDict:
+    def split_dataset(self, dataset: Dataset) -> DatasetDict:
         """
-        Split the dataset into train, test, and optionally dev sets.
+        Split the dataset into train, test, and optionally dev sets based on the configuration specified in dataset_config.
 
         Args:
             dataset (Dataset): The dataset to split.
-            test_size (float): The proportion of the dataset to include in the test split. Default is 0.2.
-            dev_size (float, optional): The proportion of the dataset to include in the dev split. Default is None.
-            stratify_on (str, optional): The column to use for stratified splitting. Default is None.
-            random_state (int, optional): The random state for reproducibility. Default is None.
 
         Returns:
             DatasetDict: A dictionary containing the train, test, and optionally dev datasets.
         """
-        if dev_size is None:
-            # Split the dataset into train and test sets
+        if self.dataset_config.dev_size is None:
             dataset_dict = dataset.train_test_split(
-                test_size=test_size,
-                stratify_by_column=stratify_on,
-                seed=random_state,
+                test_size=self.dataset_config.test_size,
+                stratify_by_column=self.dataset_config.stratify_on,
+                seed=self.dataset_config.random_state,
             )
             dataset_dict = DatasetDict(
                 {
-                    self.train_split_name: dataset_dict["train"],
-                    self.test_split_name: dataset_dict["test"],
+                    self.dataset_config.train_split_name: dataset_dict["train"],
+                    self.dataset_config.test_split_name: dataset_dict["test"],
                 }
             )
         else:
-            # Split the dataset into train, test, and dev sets
             train_test_dict = dataset.train_test_split(
-                test_size=test_size + dev_size,
-                stratify_by_column=stratify_on,
-                seed=random_state,
+                test_size=self.dataset_config.test_size + self.dataset_config.dev_size,
+                stratify_by_column=self.dataset_config.stratify_on,
+                seed=self.dataset_config.random_state,
             )
             test_dev_dict = train_test_dict["test"].train_test_split(
-                test_size=dev_size / (test_size + dev_size),
-                stratify_by_column=stratify_on,
-                seed=random_state,
+                test_size=self.dataset_config.dev_size
+                / (self.dataset_config.test_size + self.dataset_config.dev_size),
+                stratify_by_column=self.dataset_config.stratify_on,
+                seed=self.dataset_config.random_state,
             )
             dataset_dict = DatasetDict(
                 {
-                    self.train_split_name: train_test_dict["train"],
-                    self.test_split_name: test_dev_dict["train"],
+                    self.dataset_config.train_split_name: train_test_dict["train"],
+                    self.dataset_config.test_split_name: test_dev_dict["train"],
                     "dev": test_dev_dict["test"],
                 }
             )
-
         return dataset_dict
 
     def compute_metrics(self, pred: EvalPrediction) -> Dict[str, float]:
@@ -260,21 +306,26 @@ class TextClassifier(BaseModel):
         accuracy = evaluate.load("accuracy")
         return {"accuracy": accuracy.compute(predictions=preds, references=labels)}
 
-    def train(self, dataset: Dataset, training_args: TrainingConfig) -> None:
+    def train(
+        self, dataset: Dataset, training_config: Optional[TrainingConfig] = None
+    ) -> None:
         """
-        Train the model on the given dataset.
+        Train the model on the provided dataset.
 
         Args:
             dataset (Dataset): The dataset to use for training.
-            training_args (TrainingConfig): The training configuration.
+            training_config (Optional[TrainingConfig]): The training configuration to use. If not provided, the default training_config will be used.
         """
         dataset = self.preprocess_dataset(dataset)
         dataset_dict = self.split_dataset(dataset)
-        train_dataset = dataset_dict[self.train_split_name]
-        test_dataset = dataset_dict[self.test_split_name]
+        train_dataset = dataset_dict[self.dataset_config.train_split_name]
+        test_dataset = dataset_dict[self.dataset_config.test_split_name]
 
-        training_args_dict = training_args.dict()
-        training_args_dict["output_dir"] = training_args.output_dir
+        if training_config is None:
+            training_config = self.training_config
+
+        training_args_dict = training_config.dict()
+        training_args_dict["output_dir"] = training_config.output_dir
         training_args = TrainingArguments(**training_args_dict)
 
         trainer = Trainer(
@@ -289,7 +340,7 @@ class TextClassifier(BaseModel):
 
     def predict(self, dataset: Dataset) -> List[int]:
         """
-        Make predictions on the given dataset.
+        Make predictions on the provided dataset.
 
         Args:
             dataset (Dataset): The dataset to make predictions on.
@@ -323,7 +374,7 @@ class TextClassifier(BaseModel):
 
     def plot_confusion_matrix(self, dataset: Dataset, labels: List[str]) -> None:
         """
-        Plot the confusion matrix for the given dataset.
+        Plot the confusion matrix for the provided dataset.
 
         Args:
             dataset (Dataset): The dataset to evaluate.
@@ -339,3 +390,95 @@ class TextClassifier(BaseModel):
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
         disp.plot(cmap="Blues")
         plt.show()
+
+    def cross_validate_and_predict(
+        self,
+        dataset: Dataset,
+        training_config: Optional[TrainingConfig] = None,
+        cross_validate_config: Optional[CrossValidateConfig] = None,
+    ) -> List[List[int]]:
+        """
+        Perform cross-validation and prediction using the trained model.
+
+        Args:
+            dataset (Dataset): The dataset to use for cross-validation and prediction.
+            training_config (Optional[TrainingConfig]): The training configuration to use. If not provided, the default training_config will be used.
+            cross_validate_config (Optional[CrossValidateConfig]): The cross-validation configuration to use. If not provided, the default cross_validate_config will be used.
+
+        Returns:
+            List[List[int]]: A list of predicted labels for each fold.
+        """
+        dataset = self.preprocess_dataset(dataset)
+
+        if cross_validate_config is None:
+            cross_validate_config = self.cross_validate_config
+
+        kf = KFold(
+            n_splits=cross_validate_config.n_splits,
+            shuffle=cross_validate_config.shuffle,
+            random_state=cross_validate_config.random_state,
+        )
+
+        predictions_list = []
+        for train_index, test_index in kf.split(dataset):
+            train_dataset = dataset.select(train_index)
+            test_dataset = dataset.select(test_index)
+
+            if cross_validate_config.validation_size > 0:
+                train_dataset, validation_dataset = train_dataset.train_test_split(
+                    test_size=cross_validate_config.validation_size,
+                    shuffle=cross_validate_config.shuffle,
+                    seed=cross_validate_config.random_state,
+                ).values()
+            else:
+                validation_dataset = None
+
+            if training_config is None:
+                training_config = self.training_config
+
+            training_args_dict = training_config.dict()
+            training_args_dict["output_dir"] = f"output_{len(predictions_list)}"
+            training_args = TrainingArguments(**training_args_dict)
+
+            trainer = Trainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=train_dataset,
+                eval_dataset=validation_dataset,
+                compute_metrics=self.compute_metrics,
+            )
+
+            trainer.train()
+            predictions = trainer.predict(test_dataset)
+            preds = predictions.predictions.argmax(-1)
+            predictions_list.append(preds.tolist())
+
+        return predictions_list
+
+    def find_potential_label_errors(
+        self, predictions_list: List[List[int]], labels: List[int]
+    ) -> Dict[str, Any]:
+        """
+        Find potential label errors using cleanlab's find_label_issues function.
+
+        Args:
+            predictions_list (List[List[int]]): A list of predicted labels for each fold.
+            labels (List[int]): The true labels of the samples.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing information about the identified label issues.
+        """
+        num_folds = len(predictions_list)
+        num_samples = len(labels)
+
+        predicted_probs = np.zeros((num_samples, self.num_labels))
+
+        for fold_predictions in predictions_list:
+            for idx, label in enumerate(fold_predictions):
+                predicted_probs[idx][label] += 1 / num_folds
+
+        return find_label_issues(
+            labels,
+            predicted_probs,
+            return_indices_ranked_by="self_confidence",
+        )
