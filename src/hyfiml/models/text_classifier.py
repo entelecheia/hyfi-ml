@@ -84,7 +84,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cleanlab.filter import find_label_issues
 from datasets import Dataset, DatasetDict, load_dataset
-from hyfi.composer import BaseModel, Field
+from hyfi.composer import BaseModel
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import (
@@ -147,6 +147,7 @@ class DatasetConfig(BaseModel):
         dev_size (Optional[float]): The proportion of the dataset to include in the dev split. Default is None.
         stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
         random_state (Optional[int]): The random state for reproducibility. Default is None.
+        max_length (int): The maximum length of the text sequences to be processed. Default is 256.
     """
 
     dataset_name: str
@@ -164,6 +165,7 @@ class DatasetConfig(BaseModel):
     dev_size: Optional[float] = None
     stratify_on: Optional[str] = None
     random_state: Optional[int] = None
+    max_length: int = 256
 
 
 class CrossValidateConfig(BaseModel):
@@ -202,15 +204,23 @@ class TextClassifier(BaseModel):
     dataset_config: DatasetConfig
     training_config: TrainingConfig
     cross_validate_config: CrossValidateConfig
-    tokenizer: AutoTokenizer = Field(init=False)
-    model: AutoModelForSequenceClassification = Field(init=False)
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_name, num_labels=self.num_labels
-        )
+    __tokenizer__: Optional[AutoTokenizer] = None
+    __model__: Optional[AutoModelForSequenceClassification] = None
+
+    @property
+    def tokenizer(self):
+        if self.__tokenizer__ is None:
+            self.__tokenizer__ = AutoTokenizer.from_pretrained(self.model_name)
+        return self.__tokenizer__
+
+    @property
+    def model(self):
+        if self.__model__ is None:
+            self.__model__ = AutoModelForSequenceClassification.from_pretrained(
+                self.model_name, num_labels=self.num_labels
+            )
+        return self.__model__
 
     def load_dataset(self) -> Dataset:
         """
@@ -221,7 +231,7 @@ class TextClassifier(BaseModel):
         """
         return load_dataset(
             self.dataset_config.dataset_name,
-            self.dataset_config.dataset_config_name,
+            name=self.dataset_config.dataset_config_name,
             data_dir=self.dataset_config.data_dir,
             data_files=self.dataset_config.data_files,
             split=self.dataset_config.load_data_split,
@@ -240,7 +250,10 @@ class TextClassifier(BaseModel):
 
         def tokenize(examples):
             return self.tokenizer(
-                examples[self.dataset_config.text_column_name], truncation=True
+                examples[self.dataset_config.text_column_name],
+                padding="max_length",
+                truncation=True,
+                max_length=self.dataset_config.max_length,
             )
 
         dataset = dataset.map(tokenize, batched=True)
@@ -315,7 +328,9 @@ class TextClassifier(BaseModel):
         return {"accuracy": accuracy.compute(predictions=preds, references=labels)}
 
     def train(
-        self, dataset: Dataset, training_config: Optional[TrainingConfig] = None
+        self,
+        dataset: Dataset,
+        training_config: Optional[TrainingConfig] = None,
     ) -> None:
         """
         Train the model on the provided dataset.
