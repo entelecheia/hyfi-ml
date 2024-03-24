@@ -1,3 +1,6 @@
+workspace/
+tmp/
+
 # hypothesis: https://github.com/HypothesisWorks/hypothesis
 .hypothesis/
 .vscode/
