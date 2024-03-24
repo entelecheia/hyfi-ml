@@ -35,5 +35,3 @@ coverage.xml
 *.cover
 htmlcov/
 pytest-coverage.*
-
-tmp/
