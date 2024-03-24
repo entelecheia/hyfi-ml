@@ -107,6 +107,7 @@ class TrainingConfig(BaseModel):
         per_device_eval_batch_size (int): The batch size per GPU/CPU for evaluation. Default is 8.
         warmup_steps (int): The number of steps for the warmup phase during training. Default is 500.
         weight_decay (float): The weight decay to apply (if not zero) to all layers except all bias and LayerNorm weights in AdamW optimizer. Default is 0.01.
+        learning_rate (float): The learning rate to use during training. Default is 2e-5.
         logging_dir (str): The directory to save the logs. Default is "logs".
         logging_steps (int): The logging steps. Default is 10.
         evaluation_strategy (str): The evaluation strategy to adopt during training. Default is "epoch".
@@ -121,6 +122,7 @@ class TrainingConfig(BaseModel):
     per_device_eval_batch_size: int = 8
     warmup_steps: int = 500
     weight_decay: float = 0.01
+    learning_rate: float = 2e-5
     logging_dir: str = "logs"
     logging_steps: int = 10
     evaluation_strategy: str = "epoch"
@@ -148,6 +150,7 @@ class DatasetConfig(BaseModel):
         stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
         random_state (Optional[int]): The random state for reproducibility. Default is None.
         max_length (int): The maximum length of the text sequences to be processed. Default is 256.
+        id2label (Optional[Dict[int, str]]): A dictionary mapping label indices to label names. Default is None.
     """
 
     dataset_name: str
@@ -166,6 +169,7 @@ class DatasetConfig(BaseModel):
     stratify_on: Optional[str] = None
     random_state: Optional[int] = None
     max_length: int = 256
+    id2label: Optional[Dict[int, str]] = None
 
 
 class CrossValidateConfig(BaseModel):
@@ -215,10 +219,24 @@ class TextClassifier(BaseModel):
         return self.__tokenizer__
 
     @property
+    def label2id(self):
+        # convert id2label to label2id
+        if self.dataset_config.id2label is not None:
+            return {v: k for k, v in self.dataset_config.id2label.items()}
+        return None
+
+    @property
     def model(self):
         if self.__model__ is None:
             self.__model__ = AutoModelForSequenceClassification.from_pretrained(
-                self.model_name, num_labels=self.num_labels
+                self.model_name,
+                num_labels=(
+                    len(self.dataset_config.id2label)
+                    if self.dataset_config.id2label
+                    else self.num_labels
+                ),
+                id2label=self.dataset_config.id2label,
+                label2id=self.label2id,
             )
         return self.__model__
 
@@ -262,13 +280,8 @@ class TextClassifier(BaseModel):
             batched=True,
             remove_columns=[self.dataset_config.text_column_name],
         )
-        # Add labels to tokenized datasets
-        dataset = dataset.map(
-            lambda examples: {
-                "labels": examples[self.dataset_config.label_column_name]
-            },
-            remove_columns=[self.dataset_config.label_column_name],
-        )
+        # Rename label column to "labels"
+        dataset = dataset.rename_column(self.dataset_config.label_column_name, "labels")
 
         # dataset.set_format("torch")
         return dataset
