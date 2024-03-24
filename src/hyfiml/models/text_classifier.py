@@ -256,17 +256,21 @@ class TextClassifier(BaseModel):
                 max_length=self.dataset_config.max_length,
             )
 
-        dataset = dataset.map(tokenize, batched=True)
+        # Tokenize data
         dataset = dataset.map(
-            lambda examples: {"labels": examples[self.dataset_config.label_column_name]}
+            tokenize,
+            batched=True,
+            remove_columns=[self.dataset_config.text_column_name],
         )
-        dataset = dataset.remove_columns(
-            [
-                self.dataset_config.text_column_name,
-                self.dataset_config.label_column_name,
-            ]
+        # Add labels to tokenized datasets
+        dataset = dataset.map(
+            lambda examples: {
+                "labels": examples[self.dataset_config.label_column_name]
+            },
+            remove_columns=[self.dataset_config.label_column_name],
         )
-        dataset.set_format("torch")
+
+        # dataset.set_format("torch")
         return dataset
 
     def split_dataset(self, dataset: Dataset) -> DatasetDict:
