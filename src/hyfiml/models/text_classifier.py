@@ -189,24 +189,60 @@ class TextClassifier(BaseModel):
         dataset.set_format("torch")
         return dataset
 
-    def split_dataset(self, dataset: Dataset, test_size: float = 0.2) -> DatasetDict:
+    def split_dataset(
+        self,
+        dataset: Dataset,
+        test_size: float = 0.2,
+        dev_size: Optional[float] = None,
+        stratify_on: Optional[str] = None,
+        random_state: Optional[int] = None,
+    ) -> DatasetDict:
         """
-        Split the dataset into train and test sets.
+        Split the dataset into train, test, and optionally dev sets.
 
         Args:
             dataset (Dataset): The dataset to split.
             test_size (float): The proportion of the dataset to include in the test split. Default is 0.2.
+            dev_size (float, optional): The proportion of the dataset to include in the dev split. Default is None.
+            stratify_on (str, optional): The column to use for stratified splitting. Default is None.
+            random_state (int, optional): The random state for reproducibility. Default is None.
 
         Returns:
-            DatasetDict: A dictionary containing the train and test datasets.
+            DatasetDict: A dictionary containing the train, test, and optionally dev datasets.
         """
-        dataset_dict = dataset.train_test_split(test_size=test_size)
-        dataset_dict = DatasetDict(
-            {
-                self.train_split_name: dataset_dict["train"],
-                self.test_split_name: dataset_dict["test"],
-            }
-        )
+        if dev_size is None:
+            # Split the dataset into train and test sets
+            dataset_dict = dataset.train_test_split(
+                test_size=test_size,
+                stratify_by_column=stratify_on,
+                seed=random_state,
+            )
+            dataset_dict = DatasetDict(
+                {
+                    self.train_split_name: dataset_dict["train"],
+                    self.test_split_name: dataset_dict["test"],
+                }
+            )
+        else:
+            # Split the dataset into train, test, and dev sets
+            train_test_dict = dataset.train_test_split(
+                test_size=test_size + dev_size,
+                stratify_by_column=stratify_on,
+                seed=random_state,
+            )
+            test_dev_dict = train_test_dict["test"].train_test_split(
+                test_size=dev_size / (test_size + dev_size),
+                stratify_by_column=stratify_on,
+                seed=random_state,
+            )
+            dataset_dict = DatasetDict(
+                {
+                    self.train_split_name: train_test_dict["train"],
+                    self.test_split_name: test_dev_dict["train"],
+                    "dev": test_dev_dict["test"],
+                }
+            )
+
         return dataset_dict
 
     def compute_metrics(self, pred: EvalPrediction) -> Dict[str, float]:
