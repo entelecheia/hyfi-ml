@@ -173,17 +173,6 @@ class DatasetConfig(BaseModel):
     num_labels: Optional[int] = None
     id2label: Optional[Dict[int, str]] = None
 
-    @field_validator("num_labels", mode="before")
-    def infer_num_labels(cls, v, values):
-        if v is None:
-            if "id2label" in values and values["id2label"] is not None:
-                return len(values["id2label"])
-            else:
-                raise ValueError(
-                    "num_labels must be provided if id2label is not specified."
-                )
-        return v
-
 
 class CrossValidateConfig(BaseModel):
     """
@@ -238,11 +227,21 @@ class TextClassifier(BaseModel):
         return self.__label2id__
 
     @property
+    def num_labels(self):
+        if self.dataset_config.id2label is not None:
+            return len(self.dataset_config.id2label)
+        if self.dataset_config.num_labels is None:
+            raise ValueError(
+                "num_labels must be provided if id2label is not specified."
+            )
+        return self.dataset_config.num_labels
+
+    @property
     def model(self):
         if self.__model__ is None:
             self.__model__ = AutoModelForSequenceClassification.from_pretrained(
                 self.model_name,
-                num_labels=self.dataset_config.num_labels,
+                num_labels=self.num_labels,
             )
         return self.__model__
 
