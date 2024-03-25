@@ -412,7 +412,7 @@ class TextClassifier(BaseModel):
         trainer = Trainer(model=self.model)
         predictions = trainer.predict(dataset)
         preds = predictions.predictions.argmax(-1)
-        return preds.tolist()
+        return [self.dataset_config.id2label[label] for label in preds.tolist()]
 
     def save_model(self, output_dir: str) -> None:
         """
