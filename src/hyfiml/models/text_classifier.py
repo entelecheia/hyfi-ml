@@ -37,6 +37,7 @@ Example usage:
         dataset_name="imdb",
         text_column_name="text",
         label_column_name="label",
+        num_labels=2,
     )
 
     training_config = TrainingConfig(
@@ -56,7 +57,6 @@ Example usage:
     # Create a TextClassifier instance
     classifier = TextClassifier(
         model_name="bert-base-uncased",
-        num_labels=2,
         dataset_config=dataset_config,
         training_config=training_config,
         cross_validate_config=cross_validate_config,
@@ -77,14 +77,14 @@ Example usage:
     label_issues_info = classifier.find_potential_label_errors(predictions, dataset["label"])
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 import evaluate
 import matplotlib.pyplot as plt
 import numpy as np
 from cleanlab.filter import find_label_issues
 from datasets import Dataset, DatasetDict, load_dataset
-from hyfi.composer import BaseModel, Field
+from hyfi.composer import BaseModel, field_validator
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import (
@@ -107,6 +107,7 @@ class TrainingConfig(BaseModel):
         per_device_eval_batch_size (int): The batch size per GPU/CPU for evaluation. Default is 8.
         warmup_steps (int): The number of steps for the warmup phase during training. Default is 500.
         weight_decay (float): The weight decay to apply (if not zero) to all layers except all bias and LayerNorm weights in AdamW optimizer. Default is 0.01.
+        learning_rate (float): The learning rate to use during training. Default is 2e-5.
         logging_dir (str): The directory to save the logs. Default is "logs".
         logging_steps (int): The logging steps. Default is 10.
         evaluation_strategy (str): The evaluation strategy to adopt during training. Default is "epoch".
@@ -121,12 +122,13 @@ class TrainingConfig(BaseModel):
     per_device_eval_batch_size: int = 8
     warmup_steps: int = 500
     weight_decay: float = 0.01
+    learning_rate: float = 2e-5
     logging_dir: str = "logs"
     logging_steps: int = 10
     evaluation_strategy: str = "epoch"
     save_strategy: str = "epoch"
     load_best_model_at_end: bool = True
-    metric_for_best_model: str = "accuracy"
+    metric_for_best_model: str = "eval_accuracy"
 
 
 class DatasetConfig(BaseModel):
@@ -136,28 +138,38 @@ class DatasetConfig(BaseModel):
     Attributes:
         dataset_name (str): The name of the dataset to load from the Hugging Face datasets library.
         dataset_config_name (Optional[str]): The configuration name of the dataset. Default is None.
+        data_dir (Optional[str]): The directory containing the dataset files. Default is None.
+        data_files (Optional[Union[str, Sequence[str], Mapping[str, Union[str, Sequence[str]]]]): The dataset files to load. Default is None.
         train_split_name (str): The name of the train split. Default is "train".
         test_split_name (str): The name of the test split. Default is "test".
         text_column_name (str): The name of the column containing the text data. Default is "text".
         label_column_name (str): The name of the column containing the label data. Default is "label".
         load_data_split (str): The split of the dataset to load. Default is "train".
         test_size (float): The proportion of the dataset to include in the test split. Default is 0.2.
-        dev_size (Optional[float]): The proportion of the dataset to include in the dev split. Default is None.
         stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
         random_state (Optional[int]): The random state for reproducibility. Default is None.
+        max_length (int): The maximum length of the text sequences to be processed. Default is 256.
+        num_labels (Optional[int]): The number of labels in the classification task. Default is None.
+        id2label (Optional[Dict[int, str]]): A dictionary mapping label indices to label names. Default is None.
     """
 
     dataset_name: str
     dataset_config_name: Optional[str] = None
+    data_dir: Optional[str] = None
+    data_files: Optional[
+        Union[str, Sequence[str], Mapping[str, Union[str, Sequence[str]]]]
+    ] = None
     train_split_name: str = "train"
     test_split_name: str = "test"
     text_column_name: str = "text"
     label_column_name: str = "label"
     load_data_split: str = "train"
     test_size: float = 0.2
-    dev_size: Optional[float] = None
     stratify_on: Optional[str] = None
     random_state: Optional[int] = None
+    max_length: int = 256
+    num_labels: Optional[int] = None
+    id2label: Optional[Dict[int, str]] = None
 
 
 class CrossValidateConfig(BaseModel):
@@ -183,7 +195,6 @@ class TextClassifier(BaseModel):
 
     Attributes:
         model_name (str): The name of the transformer model to use.
-        num_labels (int): The number of labels for classification.
         dataset_config (DatasetConfig): The configuration for the dataset.
         training_config (TrainingConfig): The configuration for training.
         cross_validate_config (CrossValidateConfig): The configuration for cross-validation.
@@ -192,19 +203,45 @@ class TextClassifier(BaseModel):
     """
 
     model_name: str
-    num_labels: int
     dataset_config: DatasetConfig
     training_config: TrainingConfig
     cross_validate_config: CrossValidateConfig
-    tokenizer: AutoTokenizer = Field(init=False)
-    model: AutoModelForSequenceClassification = Field(init=False)
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_name, num_labels=self.num_labels
-        )
+    __tokenizer__: Optional[AutoTokenizer] = None
+    __model__: Optional[AutoModelForSequenceClassification] = None
+    __label2id__: Optional[Dict[str, int]] = None
+
+    @property
+    def tokenizer(self):
+        if self.__tokenizer__ is None:
+            self.__tokenizer__ = AutoTokenizer.from_pretrained(self.model_name)
+        return self.__tokenizer__
+
+    @property
+    def label2id(self):
+        # convert id2label to label2id
+        if self.__label2id__ is None and self.dataset_config.id2label is not None:
+            self.__label2id__ = {v: k for k, v in self.dataset_config.id2label.items()}
+        return self.__label2id__
+
+    @property
+    def num_labels(self):
+        if self.dataset_config.id2label is not None:
+            return len(self.dataset_config.id2label)
+        if self.dataset_config.num_labels is None:
+            raise ValueError(
+                "num_labels must be provided if id2label is not specified."
+            )
+        return self.dataset_config.num_labels
+
+    @property
+    def model(self):
+        if self.__model__ is None:
+            self.__model__ = AutoModelForSequenceClassification.from_pretrained(
+                self.model_name,
+                num_labels=self.num_labels,
+            )
+        return self.__model__
 
     def load_dataset(self) -> Dataset:
         """
@@ -215,7 +252,9 @@ class TextClassifier(BaseModel):
         """
         return load_dataset(
             self.dataset_config.dataset_name,
-            self.dataset_config.dataset_config_name,
+            name=self.dataset_config.dataset_config_name,
+            data_dir=self.dataset_config.data_dir,
+            data_files=self.dataset_config.data_files,
             split=self.dataset_config.load_data_split,
         )
 
@@ -232,20 +271,37 @@ class TextClassifier(BaseModel):
 
         def tokenize(examples):
             return self.tokenizer(
-                examples[self.dataset_config.text_column_name], truncation=True
+                examples[self.dataset_config.text_column_name],
+                padding="max_length",
+                truncation=True,
+                max_length=512,
             )
 
+        def convert_labels(examples):
+            if self.label2id is not None:
+                labels = [self.label2id[label] for label in examples["original_labels"]]
+            else:
+                labels = examples["original_labels"]
+            return {"labels": labels}
+
+        # Tokenize text
         dataset = dataset.map(tokenize, batched=True)
-        dataset = dataset.map(
-            lambda examples: {"labels": examples[self.dataset_config.label_column_name]}
+
+        # Convert labels
+        dataset = dataset.rename_column(
+            self.dataset_config.label_column_name, "original_labels"
         )
+        dataset = dataset.map(convert_labels, batched=True)
+
+        # Remove unnecessary columns
         dataset = dataset.remove_columns(
             [
                 self.dataset_config.text_column_name,
-                self.dataset_config.label_column_name,
+                "original_labels",
             ]
         )
-        dataset.set_format("torch")
+
+        # dataset.set_format("torch")
         return dataset
 
     def split_dataset(self, dataset: Dataset) -> DatasetDict:
@@ -258,37 +314,17 @@ class TextClassifier(BaseModel):
         Returns:
             DatasetDict: A dictionary containing the train, test, and optionally dev datasets.
         """
-        if self.dataset_config.dev_size is None:
-            dataset_dict = dataset.train_test_split(
-                test_size=self.dataset_config.test_size,
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            dataset_dict = DatasetDict(
-                {
-                    self.dataset_config.train_split_name: dataset_dict["train"],
-                    self.dataset_config.test_split_name: dataset_dict["test"],
-                }
-            )
-        else:
-            train_test_dict = dataset.train_test_split(
-                test_size=self.dataset_config.test_size + self.dataset_config.dev_size,
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            test_dev_dict = train_test_dict["test"].train_test_split(
-                test_size=self.dataset_config.dev_size
-                / (self.dataset_config.test_size + self.dataset_config.dev_size),
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            dataset_dict = DatasetDict(
-                {
-                    self.dataset_config.train_split_name: train_test_dict["train"],
-                    self.dataset_config.test_split_name: test_dev_dict["train"],
-                    "dev": test_dev_dict["test"],
-                }
-            )
+        dataset_dict = dataset.train_test_split(
+            test_size=self.dataset_config.test_size,
+            stratify_by_column=self.dataset_config.stratify_on,
+            seed=self.dataset_config.random_state,
+        )
+        dataset_dict = DatasetDict(
+            {
+                self.dataset_config.train_split_name: dataset_dict["train"],
+                self.dataset_config.test_split_name: dataset_dict["test"],
+            }
+        )
         return dataset_dict
 
     def compute_metrics(self, pred: EvalPrediction) -> Dict[str, float]:
@@ -299,15 +335,17 @@ class TextClassifier(BaseModel):
             pred (EvalPrediction): The predictions and labels.
 
         Returns:
-            Dict[str, float]: A dictionary containing the computed metrics.
+            float: The accuracy of the predictions.
         """
         labels = pred.label_ids
         preds = pred.predictions.argmax(-1)
         accuracy = evaluate.load("accuracy")
-        return {"accuracy": accuracy.compute(predictions=preds, references=labels)}
+        return accuracy.compute(predictions=preds, references=labels)
 
     def train(
-        self, dataset: Dataset, training_config: Optional[TrainingConfig] = None
+        self,
+        dataset: Dataset,
+        training_config: Optional[TrainingConfig] = None,
     ) -> None:
         """
         Train the model on the provided dataset.
@@ -324,7 +362,7 @@ class TextClassifier(BaseModel):
         if training_config is None:
             training_config = self.training_config
 
-        training_args_dict = training_config.dict()
+        training_args_dict = training_config.model_dump()
         training_args_dict["output_dir"] = training_config.output_dir
         training_args = TrainingArguments(**training_args_dict)
 
@@ -352,7 +390,7 @@ class TextClassifier(BaseModel):
         trainer = Trainer(model=self.model)
         predictions = trainer.predict(dataset)
         preds = predictions.predictions.argmax(-1)
-        return preds.tolist()
+        return [self.dataset_config.id2label[label] for label in preds.tolist()]
 
     def save_model(self, output_dir: str) -> None:
         """
@@ -476,6 +514,9 @@ class TextClassifier(BaseModel):
         for fold_predictions in predictions_list:
             for idx, label in enumerate(fold_predictions):
                 predicted_probs[idx][label] += 1 / num_folds
+
+        if self.label2id is not None:
+            labels = [self.label2id[label] for label in labels]
 
         return find_label_issues(
             labels,
