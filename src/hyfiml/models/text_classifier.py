@@ -146,7 +146,6 @@ class DatasetConfig(BaseModel):
         label_column_name (str): The name of the column containing the label data. Default is "label".
         load_data_split (str): The split of the dataset to load. Default is "train".
         test_size (float): The proportion of the dataset to include in the test split. Default is 0.2.
-        dev_size (Optional[float]): The proportion of the dataset to include in the dev split. Default is None.
         stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
         random_state (Optional[int]): The random state for reproducibility. Default is None.
         max_length (int): The maximum length of the text sequences to be processed. Default is 256.
@@ -166,7 +165,6 @@ class DatasetConfig(BaseModel):
     label_column_name: str = "label"
     load_data_split: str = "train"
     test_size: float = 0.2
-    dev_size: Optional[float] = None
     stratify_on: Optional[str] = None
     random_state: Optional[int] = None
     max_length: int = 256
@@ -316,37 +314,17 @@ class TextClassifier(BaseModel):
         Returns:
             DatasetDict: A dictionary containing the train, test, and optionally dev datasets.
         """
-        if self.dataset_config.dev_size is None:
-            dataset_dict = dataset.train_test_split(
-                test_size=self.dataset_config.test_size,
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            dataset_dict = DatasetDict(
-                {
-                    self.dataset_config.train_split_name: dataset_dict["train"],
-                    self.dataset_config.test_split_name: dataset_dict["test"],
-                }
-            )
-        else:
-            train_test_dict = dataset.train_test_split(
-                test_size=self.dataset_config.test_size + self.dataset_config.dev_size,
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            test_dev_dict = train_test_dict["test"].train_test_split(
-                test_size=self.dataset_config.dev_size
-                / (self.dataset_config.test_size + self.dataset_config.dev_size),
-                stratify_by_column=self.dataset_config.stratify_on,
-                seed=self.dataset_config.random_state,
-            )
-            dataset_dict = DatasetDict(
-                {
-                    self.dataset_config.train_split_name: train_test_dict["train"],
-                    self.dataset_config.test_split_name: test_dev_dict["train"],
-                    "dev": test_dev_dict["test"],
-                }
-            )
+        dataset_dict = dataset.train_test_split(
+            test_size=self.dataset_config.test_size,
+            stratify_by_column=self.dataset_config.stratify_on,
+            seed=self.dataset_config.random_state,
+        )
+        dataset_dict = DatasetDict(
+            {
+                self.dataset_config.train_split_name: dataset_dict["train"],
+                self.dataset_config.test_split_name: dataset_dict["test"],
+            }
+        )
         return dataset_dict
 
     def compute_metrics(self, pred: EvalPrediction) -> Dict[str, float]:
@@ -536,6 +514,9 @@ class TextClassifier(BaseModel):
         for fold_predictions in predictions_list:
             for idx, label in enumerate(fold_predictions):
                 predicted_probs[idx][label] += 1 / num_folds
+
+        if self.label2id is not None:
+            labels = [self.label2id[label] for label in labels]
 
         return find_label_issues(
             labels,
