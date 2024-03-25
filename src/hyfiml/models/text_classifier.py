@@ -84,7 +84,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cleanlab.filter import find_label_issues
 from datasets import Dataset, DatasetDict, load_dataset
-from hyfi.composer import BaseModel
+from hyfi.composer import BaseModel, field_validator
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import (
@@ -128,7 +128,7 @@ class TrainingConfig(BaseModel):
     evaluation_strategy: str = "epoch"
     save_strategy: str = "epoch"
     load_best_model_at_end: bool = True
-    metric_for_best_model: str = "accuracy"
+    metric_for_best_model: str = "eval_accuracy"
 
 
 class DatasetConfig(BaseModel):
@@ -150,6 +150,7 @@ class DatasetConfig(BaseModel):
         stratify_on (Optional[str]): The column to use for stratified splitting. Default is None.
         random_state (Optional[int]): The random state for reproducibility. Default is None.
         max_length (int): The maximum length of the text sequences to be processed. Default is 256.
+        num_labels (Optional[int]): The number of labels in the classification task. Default is None.
         id2label (Optional[Dict[int, str]]): A dictionary mapping label indices to label names. Default is None.
     """
 
@@ -169,7 +170,19 @@ class DatasetConfig(BaseModel):
     stratify_on: Optional[str] = None
     random_state: Optional[int] = None
     max_length: int = 256
+    num_labels: Optional[int] = None
     id2label: Optional[Dict[int, str]] = None
+
+    @field_validator("num_labels", mode="before")
+    def infer_num_labels(cls, v, values):
+        if v is None:
+            if "id2label" in values and values["id2label"] is not None:
+                return len(values["id2label"])
+            else:
+                raise ValueError(
+                    "num_labels must be provided if id2label is not specified."
+                )
+        return v
 
 
 class CrossValidateConfig(BaseModel):
@@ -195,7 +208,6 @@ class TextClassifier(BaseModel):
 
     Attributes:
         model_name (str): The name of the transformer model to use.
-        num_labels (int): The number of labels for classification.
         dataset_config (DatasetConfig): The configuration for the dataset.
         training_config (TrainingConfig): The configuration for training.
         cross_validate_config (CrossValidateConfig): The configuration for cross-validation.
@@ -204,13 +216,13 @@ class TextClassifier(BaseModel):
     """
 
     model_name: str
-    num_labels: int
     dataset_config: DatasetConfig
     training_config: TrainingConfig
     cross_validate_config: CrossValidateConfig
 
     __tokenizer__: Optional[AutoTokenizer] = None
     __model__: Optional[AutoModelForSequenceClassification] = None
+    __label2id__: Optional[Dict[str, int]] = None
 
     @property
     def tokenizer(self):
@@ -221,22 +233,16 @@ class TextClassifier(BaseModel):
     @property
     def label2id(self):
         # convert id2label to label2id
-        if self.dataset_config.id2label is not None:
-            return {v: k for k, v in self.dataset_config.id2label.items()}
-        return None
+        if self.__label2id__ is None and self.dataset_config.id2label is not None:
+            self.__label2id__ = {v: k for k, v in self.dataset_config.id2label.items()}
+        return self.__label2id__
 
     @property
     def model(self):
         if self.__model__ is None:
             self.__model__ = AutoModelForSequenceClassification.from_pretrained(
                 self.model_name,
-                num_labels=(
-                    len(self.dataset_config.id2label)
-                    if self.dataset_config.id2label
-                    else self.num_labels
-                ),
-                id2label=self.dataset_config.id2label,
-                label2id=self.label2id,
+                num_labels=self.dataset_config.num_labels,
             )
         return self.__model__
 
@@ -271,17 +277,32 @@ class TextClassifier(BaseModel):
                 examples[self.dataset_config.text_column_name],
                 padding="max_length",
                 truncation=True,
-                max_length=self.dataset_config.max_length,
+                max_length=512,
             )
 
-        # Tokenize data
-        dataset = dataset.map(
-            tokenize,
-            batched=True,
-            remove_columns=[self.dataset_config.text_column_name],
+        def convert_labels(examples):
+            if self.label2id is not None:
+                labels = [self.label2id[label] for label in examples["original_labels"]]
+            else:
+                labels = examples["original_labels"]
+            return {"labels": labels}
+
+        # Tokenize text
+        dataset = dataset.map(tokenize, batched=True)
+
+        # Convert labels
+        dataset = dataset.rename_column(
+            self.dataset_config.label_column_name, "original_labels"
         )
-        # Rename label column to "labels"
-        dataset = dataset.rename_column(self.dataset_config.label_column_name, "labels")
+        dataset = dataset.map(convert_labels, batched=True)
+
+        # Remove unnecessary columns
+        dataset = dataset.remove_columns(
+            [
+                self.dataset_config.text_column_name,
+                "original_labels",
+            ]
+        )
 
         # dataset.set_format("torch")
         return dataset
@@ -342,7 +363,7 @@ class TextClassifier(BaseModel):
         labels = pred.label_ids
         preds = pred.predictions.argmax(-1)
         accuracy = evaluate.load("accuracy")
-        return {"accuracy": accuracy.compute(predictions=preds, references=labels)}
+        return accuracy.compute(predictions=preds, references=labels)
 
     def train(
         self,
@@ -364,7 +385,7 @@ class TextClassifier(BaseModel):
         if training_config is None:
             training_config = self.training_config
 
-        training_args_dict = training_config.dict()
+        training_args_dict = training_config.model_dump()
         training_args_dict["output_dir"] = training_config.output_dir
         training_args = TrainingArguments(**training_args_dict)
 
