@@ -1,3 +1,5 @@
+"""Implements the HyFI ML package initialization."""
+
 import os
 
 from hyfi import HyFI

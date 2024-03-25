@@ -1,3 +1,6 @@
+workspace/
+tmp/
+
 # hypothesis: https://github.com/HypothesisWorks/hypothesis
 .hypothesis/
 .vscode/
@@ -32,3 +35,7 @@ coverage.xml
 *.cover
 htmlcov/
 pytest-coverage.*
+
+book/usage/workspace
+output/
+book/usage/output*
