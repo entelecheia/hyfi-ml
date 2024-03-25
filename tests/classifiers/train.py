@@ -17,6 +17,10 @@ model = AutoModelForSequenceClassification.from_pretrained(
     "entelecheia/ekonbert-base", num_labels=2
 )
 
+# Select only the first 1000 examples for training and testing
+dataset["train"] = dataset["train"].select(range(1000))
+dataset["test"] = dataset["test"].select(range(1000))
+
 
 # Tokenize data
 def tokenize(batch):
@@ -27,7 +31,7 @@ tokenized_datasets = dataset.map(tokenize, batched=True, remove_columns=["text"]
 
 # Add labels to tokenized datasets
 tokenized_datasets = tokenized_datasets.map(
-    lambda example: {"labels": example["label"]}, remove_columns=["label"]
+    lambda example: {"labels": example["label"]}
 )
 
 
@@ -40,11 +44,11 @@ def compute_metrics(eval_pred):
 
 # Define training arguments
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./output",
     evaluation_strategy="epoch",
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    per_device_train_batch_size=64,
+    per_device_eval_batch_size=64,
     num_train_epochs=3,
     weight_decay=0.01,
 )
