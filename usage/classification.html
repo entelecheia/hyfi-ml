@@ -490,7 +490,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-load-the-dataset-and-train-the-model">Step 6: Load the dataset and train the model</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-make-predictions-on-a-new-dataset">Step 7: Make predictions on a new dataset</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-plot-a-confusion-matrix">Step 8: Plot a confusion matrix</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-perform-cross-validation-and-find-potential-label-errors">Step 9: Perform cross-validation and find potential label errors</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
@@ -531,6 +530,12 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/yjlee/.venvs/hyfi-ml/lib/python3.10/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
 </div>
 </section>
 <section id="step-2-initialize-the-hyfi-project">
@@ -542,7 +547,7 @@ document.write(`
 
 <span class="n">h</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span>
     <span class="n">project_name</span><span class="o">=</span><span class="s2">&quot;hyfi-ml&quot;</span><span class="p">,</span>
-    <span class="n">project_root</span><span class="o">=</span><span class="s2">&quot;$HOME/workspace/projects/hyfi-ml&quot;</span><span class="p">,</span>
+    <span class="n">project_root</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
     <span class="n">logging_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
@@ -555,12 +560,12 @@ document.write(`
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:hyfi.utils.notebooks:Google Colab not detected.
 INFO:hyfi.utils.notebooks:Extension autotime not found. Install it first.
-INFO:hyfi.joblib.joblib:initialized batcher with &lt;hyfi.joblib.batcher.batcher.Batcher object at 0x7fd85667cb80&gt;
+INFO:hyfi.joblib.joblib:initialized batcher with &lt;hyfi.joblib.batcher.batcher.Batcher object at 0x7fb0eda57d30&gt;
 INFO:hyfi.main.config:HyFi project [hyfi-ml] initialized
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>project_dir: /home/yjlee/workspace/projects/hyfi-ml
-project_workspace_dir: /home/yjlee/workspace/projects/hyfi-ml/workspace
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>project_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage
+project_workspace_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/workspace
 </pre></div>
 </div>
 </div>
@@ -571,7 +576,7 @@ project_workspace_dir: /home/yjlee/workspace/projects/hyfi-ml/workspace
 <h3>Step 3: Load and preprocess the dataset<a class="headerlink" href="#step-3-load-and-preprocess-the-dataset" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">project</span><span class="o">.</span><span class="n">workspace_dir</span> <span class="o">/</span> <span class="s1">&#39;data&#39;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">project</span><span class="o">.</span><span class="n">workspace_dir</span>
 <span class="n">raw_data</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="s2">&quot;cointax.csv&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
 <span class="n">raw_data</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 
@@ -580,13 +585,15 @@ project_workspace_dir: /home/yjlee/workspace/projects/hyfi-ml/workspace
 <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="n">data</span> <span class="o">+=</span> <span class="p">[</span>
-        <span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="s2">&quot;positive&quot;</span> <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">&quot;긍정&quot;</span> <span class="k">else</span> <span class="s2">&quot;negative&quot;</span><span class="p">)</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;positive&quot;</span> <span class="k">if</span> <span class="n">polarity</span> <span class="o">==</span> <span class="s2">&quot;긍정&quot;</span> <span class="k">else</span> <span class="s2">&quot;negative&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span>
     <span class="p">]</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">records_to_dataframe</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<span class="n">HyFI</span><span class="o">.</span><span class="n">save_dataframes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;cointax_data.parquet&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+<span class="n">data_file</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data_dir</span> <span class="o">/</span> <span class="s2">&quot;cointax_data.parquet&quot;</span><span class="p">)</span>
+<span class="n">HyFI</span><span class="o">.</span><span class="n">save_dataframes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_file</span><span class="p">)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -602,10 +609,60 @@ dtypes: object(2)
 memory usage: 11.3+ KB
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:hyfi.utils.datasets.save:Saving dataframe to /home/yjlee/workspace/projects/hyfi-ml/workspace/data/cointax_data.parquet
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>INFO:hyfi.utils.datasets.save:Saving dataframe to /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/workspace/cointax_data.parquet
 </pre></div>
 </div>
-</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>text</th>
+      <th>label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>680</th>
+      <td>소득과세가 너누 높다</td>
+      <td>negative</td>
+    </tr>
+    <tr>
+      <th>681</th>
+      <td>주식 거래세 수수료보다도 너무 높다고 생각하기에</td>
+      <td>negative</td>
+    </tr>
+    <tr>
+      <th>682</th>
+      <td>너무 심하다고 생각</td>
+      <td>negative</td>
+    </tr>
+    <tr>
+      <th>683</th>
+      <td>......</td>
+      <td>negative</td>
+    </tr>
+    <tr>
+      <th>684</th>
+      <td>수익의 20%는 너무 많다고 생각한다</td>
+      <td>negative</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
 </div>
 <p>This step loads the raw data from a CSV file, preprocesses it by extracting the text and labels, and saves the processed data as a Parquet file.</p>
 </section>
@@ -614,25 +671,26 @@ memory usage: 11.3+ KB
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset_config</span> <span class="o">=</span> <span class="n">DatasetConfig</span><span class="p">(</span>
-    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;cointax_data&quot;</span><span class="p">,</span>
-    <span class="n">dataset_config_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+    <span class="n">data_files</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span>
     <span class="n">train_split_name</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
     <span class="n">test_split_name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
     <span class="n">text_column_name</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
-    <span class="n">label_column_name</span><span class="o">=</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span>
+    <span class="n">label_column_name</span><span class="o">=</span><span class="s2">&quot;label&quot;</span><span class="p">,</span>
     <span class="n">load_data_split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
     <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">dev_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">stratify_on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">id2label</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;positive&quot;</span><span class="p">},</span>
 <span class="p">)</span>
 
 <span class="n">training_config</span> <span class="o">=</span> <span class="n">TrainingConfig</span><span class="p">(</span>
     <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
-    <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
     <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-    <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-    <span class="n">warmup_steps</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">warmup_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">weight_decay</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
     <span class="n">logging_dir</span><span class="o">=</span><span class="s2">&quot;logs&quot;</span><span class="p">,</span>
     <span class="n">logging_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
@@ -659,8 +717,7 @@ memory usage: 11.3+ KB
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">classifier</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="p">(</span>
-    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;bert-base-uncased&quot;</span><span class="p">,</span>
-    <span class="n">num_labels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;entelecheia/ekonbert-base&quot;</span><span class="p">,</span>
     <span class="n">dataset_config</span><span class="o">=</span><span class="n">dataset_config</span><span class="p">,</span>
     <span class="n">training_config</span><span class="o">=</span><span class="n">training_config</span><span class="p">,</span>
     <span class="n">cross_validate_config</span><span class="o">=</span><span class="n">cross_validate_config</span><span class="p">,</span>
@@ -676,10 +733,50 @@ memory usage: 11.3+ KB
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">()</span>
-<span class="n">classifier</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="n">train_test_datasets</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">split_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_test_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+<span class="n">classifier</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Generating train split: 685 examples [00:00, 330811.54 examples/s]
+Map: 100%|██████████| 548/548 [00:00&lt;00:00, 1290.55 examples/s]
+Map: 100%|██████████| 548/548 [00:00&lt;00:00, 137732.42 examples/s]
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at entelecheia/ekonbert-base and are newly initialized: [&#39;classifier.bias&#39;, &#39;classifier.weight&#39;]
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+      
+      <progress value='56' max='56' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [56/56 00:14, Epoch 2/2]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+ <tr style="text-align: left;">
+      <th>Epoch</th>
+      <th>Training Loss</th>
+      <th>Validation Loss</th>
+      <th>Accuracy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>0.596100</td>
+      <td>0.556980</td>
+      <td>0.690909</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0.430000</td>
+      <td>0.470387</td>
+      <td>0.754545</td>
+    </tr>
+  </tbody>
+</table><p></div></div>
 </div>
 <p>This step loads the dataset using the <code class="docutils literal notranslate"><span class="pre">load_dataset</span></code> method of the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code> and trains the model using the <code class="docutils literal notranslate"><span class="pre">train</span></code> method.</p>
 </section>
@@ -687,8 +784,18 @@ memory usage: 11.3+ KB
 <h3>Step 7: Make predictions on a new dataset<a class="headerlink" href="#step-7-make-predictions-on-a-new-dataset" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">new_dataset</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="s2">&quot;new_data.parquet&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
-<span class="n">predictions</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">new_dataset</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">test_dataset</span> <span class="o">=</span> <span class="n">train_test_datasets</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Map: 100%|██████████| 137/137 [00:00&lt;00:00, 4642.12 examples/s]
+Map: 100%|██████████| 137/137 [00:00&lt;00:00, 31647.28 examples/s]
+</pre></div>
+</div>
+<div class="output text_html"></div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;negative&#39;, &#39;positive&#39;, &#39;positive&#39;, &#39;positive&#39;]
 </pre></div>
 </div>
 </div>
@@ -699,30 +806,21 @@ memory usage: 11.3+ KB
 <h3>Step 8: Plot a confusion matrix<a class="headerlink" href="#step-8-plot-a-confusion-matrix" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;positive&quot;</span><span class="p">,</span> <span class="s2">&quot;negative&quot;</span><span class="p">]</span>
-<span class="n">classifier</span><span class="o">.</span><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">new_dataset</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;negative&quot;</span><span class="p">,</span> <span class="s2">&quot;positive&quot;</span><span class="p">]</span>
+<span class="n">classifier</span><span class="o">.</span><span class="n">plot_confusion_matrix</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"></div><img alt="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" src="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" />
 </div>
 </div>
 <p>This step plots a confusion matrix using the <code class="docutils literal notranslate"><span class="pre">plot_confusion_matrix</span></code> method of the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>. It takes the new dataset and a list of labels as arguments.</p>
 </section>
-<section id="step-9-perform-cross-validation-and-find-potential-label-errors">
-<h3>Step 9: Perform cross-validation and find potential label errors<a class="headerlink" href="#step-9-perform-cross-validation-and-find-potential-label-errors" title="Link to this heading">#</a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">predictions</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">cross_validate_and_predict</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
-<span class="n">label_issues_info</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">find_potential_label_errors</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>This step performs cross-validation using the <code class="docutils literal notranslate"><span class="pre">cross_validate_and_predict</span></code> method and finds potential label errors using the <code class="docutils literal notranslate"><span class="pre">find_potential_label_errors</span></code> method.</p>
-</section>
 </section>
 <section id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">#</a></h2>
-<p>This usage provided a step-by-step guide on how to use the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code> class from the <code class="docutils literal notranslate"><span class="pre">hyfiml.models</span></code> module for text classification tasks. It covered initializing the HyFI project, loading and preprocessing the dataset, creating configurations for the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>, creating an instance of the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>, training the model, making predictions, performing cross-validation, and finding potential label errors.</p>
+<p>This usage provided a step-by-step guide on how to use the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code> class from the <code class="docutils literal notranslate"><span class="pre">hyfiml.models</span></code> module for text classification tasks. It covered initializing the HyFI project, loading and preprocessing the dataset, creating configurations for the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>, creating an instance of the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>, training the model, making predictions, and plotting a confusion matrix.</p>
 </section>
 </section>
 
@@ -791,7 +889,6 @@ memory usage: 11.3+ KB
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-load-the-dataset-and-train-the-model">Step 6: Load the dataset and train the model</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-make-predictions-on-a-new-dataset">Step 7: Make predictions on a new dataset</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-plot-a-confusion-matrix">Step 8: Plot a confusion matrix</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-9-perform-cross-validation-and-find-potential-label-errors">Step 9: Perform cross-validation and find potential label errors</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
