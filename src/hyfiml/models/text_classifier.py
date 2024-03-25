@@ -37,6 +37,7 @@ Example usage:
         dataset_name="imdb",
         text_column_name="text",
         label_column_name="label",
+        num_labels=2,
     )
 
     training_config = TrainingConfig(
@@ -56,7 +57,6 @@ Example usage:
     # Create a TextClassifier instance
     classifier = TextClassifier(
         model_name="bert-base-uncased",
-        num_labels=2,
         dataset_config=dataset_config,
         training_config=training_config,
         cross_validate_config=cross_validate_config,
@@ -358,7 +358,7 @@ class TextClassifier(BaseModel):
             pred (EvalPrediction): The predictions and labels.
 
         Returns:
-            Dict[str, float]: A dictionary containing the computed metrics.
+            float: The accuracy of the predictions.
         """
         labels = pred.label_ids
         preds = pred.predictions.argmax(-1)
