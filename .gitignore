@@ -38,3 +38,4 @@ pytest-coverage.*
 
 book/usage/workspace
 output/
+book/usage/output*
