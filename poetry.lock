@@ -779,13 +779,13 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "docutils"
-version = "0.20.1"
+version = "0.21"
 description = "Docutils -- Python Documentation Utilities"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "docutils-0.20.1-py3-none-any.whl", hash = "sha256:96f387a2c5562db4476f09f13bbab2192e764cac08ebbf3a34a95d9b1e4a59d6"},
-    {file = "docutils-0.20.1.tar.gz", hash = "sha256:f08a4e276c3a1583a86dce3e34aba3fe04d02bba2dd51ed16106244e8a923e3b"},
+    {file = "docutils-0.21-py3-none-any.whl", hash = "sha256:c26e17ca4915b9df42a4ce2ccca1b25b8b896f33caedb1a558684f0789d0783e"},
+    {file = "docutils-0.21.tar.gz", hash = "sha256:5d8f180bd488c582c7738061c99e8001bf02765827a0d98ccd5e813f11769fd5"},
 ]
 
 [[package]]
