@@ -461,13 +461,13 @@ files = [
 
 [[package]]
 name = "cleanlab"
-version = "2.6.6"
+version = "2.7.0"
 description = "The standard package for data-centric AI, machine learning with label errors, and automatically finding and fixing dataset issues in Python."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cleanlab-2.6.6-py3-none-any.whl", hash = "sha256:aedeedf8f44b02f5f5ccb72d3bcd6ba026485fa557a3b89b38bb23de8353dc25"},
-    {file = "cleanlab-2.6.6.tar.gz", hash = "sha256:f8dfdca2a0c186b8c2f07513df8a703895c886963428edd726e689a0700686ee"},
+    {file = "cleanlab-2.7.0-py3-none-any.whl", hash = "sha256:cf9273574a7f156b3e01c189dfd21a34de3b80767cecd1ee8befa9522fc9badb"},
+    {file = "cleanlab-2.7.0.tar.gz", hash = "sha256:a58ff4a9997c393a9b37ed68e7471b54366213a5459f957f4a864b4d123a55c4"},
 ]
 
 [package.dependencies]
@@ -4020,4 +4020,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "760c74908254242ec1b74c7f7f71dd60563610fcead06306f45dc1969acf80e2"
+content-hash = "1423cfd11f96dea504942bf1f48aba456d433cd8136cea70e04be6b67275373c"
