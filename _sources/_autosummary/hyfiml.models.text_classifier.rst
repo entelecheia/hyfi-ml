@@ -4,15 +4,6 @@ hyfiml.models.text\_classifier
 .. automodule:: hyfiml.models.text_classifier
 
    
-   
-   
-
-   
-   
-   
-
-   
-   
    .. rubric:: Classes
 
    .. autosummary::
@@ -22,11 +13,3 @@ hyfiml.models.text\_classifier
       TextClassifier
       TrainingConfig
    
-   
-
-   
-   
-   
-
-
-
