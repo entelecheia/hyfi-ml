@@ -28,8 +28,8 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -523,8 +523,8 @@ document.write(`
 <h3>Step 1: Import the necessary modules<a class="headerlink" href="#step-1-import-the-necessary-modules" title="Link to this heading">#</a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hyfiml</span> <span class="kn">import</span> <span class="n">HyFI</span>
-<span class="kn">from</span> <span class="nn">hyfiml.models</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hyfiml</span><span class="w"> </span><span class="kn">import</span> <span class="n">HyFI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hyfiml.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CrossValidateConfig</span><span class="p">,</span>
     <span class="n">DatasetConfig</span><span class="p">,</span>
     <span class="n">TextClassifier</span><span class="p">,</span>
@@ -583,7 +583,7 @@ project_workspace_dir: /raid/data/yjlee/workspace/projects/hyfi-ml/book/usage/wo
 <span class="n">raw_data</span> <span class="o">=</span> <span class="n">HyFI</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">(</span><span class="s2">&quot;cointax.csv&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
 <span class="n">raw_data</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -815,7 +815,8 @@ Map: 100%|██████████| 137/137 [00:00&lt;00:00, 31647.28 exam
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_html"></div><a class="reference internal image-reference" href="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png"><img alt="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" src="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" style="width: 550px; height: 432px;" /></a>
+<div class="output text_html"></div><a class="reference internal image-reference" href="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png"><img alt="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" src="../_images/7b99c81fd240779b0c2dab7cdf42c70375fdd4f0aeff9d7f5cad04c1e9c2aec1.png" style="width: 550px; height: 432px;" />
+</a>
 </div>
 </div>
 <p>This step plots a confusion matrix using the <code class="docutils literal notranslate"><span class="pre">plot_confusion_matrix</span></code> method of the <code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code>. It takes the new dataset and a list of labels as arguments.</p>
