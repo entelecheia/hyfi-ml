@@ -19,7 +19,7 @@ hyfi = "^1.36.3"
 # hyfi = { path = "../hyfi", develop = true }
 scikit-learn = ">=1.0.0,<=1.6.0"
 cleanlab = ">=2.0.0,<=2.7.1"
-transformers = { extras = ["torch"], version = ">=4.42.3,<=4.49.0" }
+transformers = { extras = ["torch"], version = ">=4.42.3,<=4.50.1" }
 evaluate = ">=0.4.0,<=0.4.3"
 
 [tool.poetry.group.dev]
