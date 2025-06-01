@@ -3698,14 +3698,14 @@ telegram = ["requests"]
 
 [[package]]
 name = "transformers"
-version = "4.52.0"
+version = "4.52.4"
 description = "State-of-the-art Machine Learning for JAX, PyTorch and TensorFlow"
 optional = false
 python-versions = ">=3.9.0"
 groups = ["main"]
 files = [
-    {file = "transformers-4.52.0-py3-none-any.whl", hash = "sha256:73df6fad1adfbb64b27ebd604afbbea0a05d6c1e50fb5d6cd1fc32cf9498d995"},
-    {file = "transformers-4.52.0.tar.gz", hash = "sha256:1217ab6c76df7919dbd12fc4ccff4f0c84f8f25ecd1c95c5ea7476895b80990d"},
+    {file = "transformers-4.52.4-py3-none-any.whl", hash = "sha256:203f5c19416d5877e36e88633943761719538a25d9775977a24fe77a1e5adfc7"},
+    {file = "transformers-4.52.4.tar.gz", hash = "sha256:aff3764441c1adc192a08dba49740d3cbbcb72d850586075aed6bd89b98203e6"},
 ]
 
 [package.dependencies]
@@ -4118,4 +4118,4 @@ test = ["big-O", "importlib-resources ; python_version < \"3.9\"", "jaraco.funct
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.13"
-content-hash = "bee3cfbe7b53e83e24c2b220fcb43c5ab1aeb0254232f2dd38a34e8c6c376132"
+content-hash = "1b02a176781db4367a9b5ad0d9db0b1f9662d8ca4ff211363c5040067b610243"
